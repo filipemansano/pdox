@@ -71,7 +71,12 @@ class Pdox
             $this->pdo->exec("SET CHARACTER SET '" . $config['charset'] . "'");
             $this->pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_OBJ);
         } catch (PDOException $e) {
-            die('Cannot the connect to Database with PDO. ' . $e->getMessage());
+
+            if ($this->debug === true) {
+                die('Cannot the connect to Database with PDO. ' . $e->getMessage());
+            }
+
+            throw $e;
         }
 
         return $this->pdo;
@@ -747,11 +752,12 @@ class Pdox
 
         if ($all) {
             $result = $query->fetchAll($type);
+            $this->numRows = count($result);
         } else {
             $result = $query->fetch($type);
+            $this->numRows = $result ? 1 : 0;
         }
 
-        $this->numRows = count($result);
         return $result;
     }
 
