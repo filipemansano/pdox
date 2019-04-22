@@ -615,11 +615,8 @@ class Pdox
     public function update(array $data, $type = false)
     {
         $query = 'UPDATE ' . $this->from . ' SET ';
-        $values = [];
+        $values = $this->bindValueInArray($data);
 
-        foreach ($data as $column => $val) {
-            $values[] = $column . '=' . $this->escape($val);
-        }
         $query .= implode(',', $values);
 
         if (! is_null($this->where)) {
@@ -899,5 +896,38 @@ class Pdox
         $this->transactionCount = 0;
 
         return;
+    }
+
+    private function checkValueIsReservedFunction($value){
+
+        $reservedFunctions = [
+            'DATE',
+            'ST_GeomFromText'
+        ];
+
+        foreach($reservedFunctions as $fnc){
+
+            if(preg_match("/^{$fnc}\s?\(.+?\)$/", $value)){
+                return TRUE;
+            }
+        }
+
+        return FALSE;
+    }
+
+    private function bindValueInArray(array $data){
+
+        $values = [];
+
+        foreach ($data as $column => $val) {
+
+            if(!$this->checkValueIsReservedFunction($val)){
+                $val = $this->escape($val);
+            }
+
+            $values[] = $column . '=' . $val;
+        }
+
+        return $values;
     }
 }
